@@ -1,0 +1,9 @@
+services:
+  backend:
+    sysctls:
+      net.ipv4.ip_local_port_range: "{{ testcenter_local_port_range }}"
+
+  file-server:
+    sysctls:
+      net.ipv4.ip_local_port_range: "{{ testcenter_local_port_range }}"
+

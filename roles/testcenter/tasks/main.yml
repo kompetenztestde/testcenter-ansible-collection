@@ -1,0 +1,116 @@
+- name: Ensure make is installed
+  ansible.builtin.package:
+    name: make
+    state: present
+  become: true
+
+- name: Ensure installation dirs exist
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+  loop:
+    - "{{ testcenter_dir }}"
+    - "{{ testcenter_dir }}/backup/release"
+    - "{{ testcenter_dir }}/backup/temp"
+    - "{{ testcenter_dir }}/config/traefik"
+    - "{{ testcenter_dir }}/scripts/make"
+    - "{{ testcenter_dir }}/scripts/migration"
+    - "{{ testcenter_dir }}/secrets/traefik/certs/acme"
+
+- name: Ensure files are downloaded
+  ansible.builtin.get_url:
+    url: "https://raw.githubusercontent.com/iqb-berlin/testcenter/{{ testcenter_version }}/{{ item.src }}"
+    dest: "{{ testcenter_dir }}/{{ item.dest }}"
+    backup: true
+  loop:
+    - src: docker-compose.yml
+      dest: docker-compose.yml
+    - src: docker-compose.prod.yml
+      dest: docker-compose.prod.yml
+    - src: docker-compose.prod.tls.yml
+      dest: docker-compose.prod.tls.yml
+    - src: .env.prod-template
+      dest: .env.prod-template
+    - src: config/traefik/tls-acme.yml
+      dest: config/traefik/tls-acme.yml
+    - src: config/traefik/tls-certificates.yml
+      dest: config/traefik/tls-certificates.yml
+    - src: config/traefik/tls-options.yml
+      dest: config/traefik/tls-options.yml
+    - src: scripts/make/prod.mk
+      dest: scripts/make/prod.mk
+    - src: scripts/update.sh
+      dest: scripts/update_testcenter.sh
+  register: download_result
+
+- name: Ensure metrics compose file exists
+  ansible.builtin.template:
+    src: "docker-compose.metrics.yml.j2"
+    dest: "{{ testcenter_dir }}/docker-compose.metrics.yml"
+  when: testcenter_monitoring_enabled is defined and testcenter_monitoring_enabled
+
+- name: Ensure ports compose file exists
+  ansible.builtin.template:
+    src: "docker-compose.ports.yml.j2"
+    dest: "{{ testcenter_dir }}/docker-compose.ports.yml"
+  when: testcenter_local_port_range is defined
+
+- name: Ensure logging compose file exists
+  ansible.builtin.template:
+    src: "docker-compose.logging.yml.j2"
+    dest: "{{ testcenter_dir }}/docker-compose.logging.yml"
+  when: docker_log_driver == 'journald'
+
+- name: Check if .env.prod-template changed
+  ansible.builtin.set_fact:
+    env_template_changed: >-
+      {{
+        download_result.results
+        | selectattr('item.dest', 'equalto', '.env.prod-template')
+        | map(attribute='changed')
+        | first
+        | default(false)
+      }}
+
+- name: Check if prod.mk changed
+  ansible.builtin.set_fact:
+    prod_mk_changed: >-
+      {{
+        download_result.results
+        | selectattr('item.dest', 'equalto', 'scripts/make/prod.mk')
+        | map(attribute='changed')
+        | first
+        | default(false)
+      }}
+
+- name: Ensure update_testcenter.sh is executable
+  ansible.builtin.file:
+    path: "{{ testcenter_dir }}/scripts/update_testcenter.sh"
+    mode: "0775"
+
+- name: Ensure env file is configured
+  ansible.builtin.template:
+    src: env.prod.j2
+    dest: "{{ testcenter_dir }}/.env.prod"
+    mode: '0600'
+
+- name: Ensure update script is configured
+  ansible.builtin.replace:
+    path: "{{ testcenter_dir }}/scripts/make/testcenter.mk"
+    regexp: "scripts/update.sh"
+    replace: "scripts/update_testcenter.sh"
+
+- name: Ensure makefile exists
+  ansible.builtin.template:
+    src: testcenter.mk.j2
+    dest: "{{ testcenter_dir }}/scripts/make/testcenter.mk"
+
+- name: Ensure reference Makefile exists
+  ansible.builtin.template:
+    src: "Makefile.j2"
+    dest: "{{ testcenter_dir }}/Makefile"
+
+- name: Ensure testcenter is started
+  ansible.builtin.command:
+    cmd: make testcenter-up
+    chdir: "{{ testcenter_dir }}"

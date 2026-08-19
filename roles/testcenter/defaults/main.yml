@@ -1,0 +1,25 @@
+testcenter_mysql_user: iqb_tba_db_user
+testcenter_mysql_database: iqb_tba_testcenter
+testcenter_mysql_binlog_expire_logs_seconds: 691200
+testcenter_tls_enabled: "true"
+testcenter_tls_certificate_resolver: acme
+testcenter_tls_acme_email: ""
+testcenter_tls_acme_ca_server: https://acme-v02.api.letsencrypt.org/directory
+testcenter_tls_acme_eab_kid: ""
+testcenter_tls_acme_eab_hmac_encoded: ""
+testcenter_http_port: "80"
+testcenter_https_port: "443"
+testcenter_dockerhub_proxy: ""
+testcenter_restart_policy: "always"
+testcenter_broadcaster_enabled: "true"
+testcenter_file_server_enabled: "true"
+testcenter_redis_memory_max: "1gb"
+testcenter_redis_cache_files: "false"
+testcenter_docker_daemon_mtu: "1500"
+testcenter_backup: false
+testcenter_monitoring_enabled: false
+testcenter_brute_force_protection: admin login person
+testcenter_password_min_length: 7
+testcenter_password_pattern: '^.*$'
+testcenter_set_admin_init_password: true
+
