@@ -15,7 +15,7 @@ short_description: Manage IQB Testcenter App Config
 
 version_added: "1.0.0"
 
-description: Manage IQB Testcenter App Config such as text replacements or imprint 
+description: Manage IQB Testcenter App Config such as text replacements or imprint
 
 options:
     baseurl:

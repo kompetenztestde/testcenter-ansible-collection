@@ -15,7 +15,7 @@ def get_authenticated_session(
         "name": auth_user,
         "password": auth_password,
     }
-    r = s.put(baseurl + "/api/session/admin", json=auth_payload)
+    r = requests.put(baseurl + "/api/session/admin", json=auth_payload)
     r.raise_for_status()
 
     auth_token = r.json()["token"]
@@ -31,8 +31,8 @@ def handle_requests_exception(
 ):
     module.fail_json(
         msg=msg,
-        status_code=e.response.status_code if e.response else None,
-        server_msg=e.response.text if e.response else None,
+        status_code=e.response.status_code if e.response is not None else None,
+        server_msg=e.response.text if e.response is not None else None,
         exception=e,
         **result,
     )
@@ -42,7 +42,6 @@ def get_users(s: requests.Session, baseurl: str) -> List[dict]:
     r = s.get(baseurl + "/api/users")
     r.raise_for_status()
     return r.json()
-
 
 
 def get_user_id(users: List[dict], name: str) -> Optional[int]:

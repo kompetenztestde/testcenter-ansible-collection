@@ -1,0 +1,10 @@
+[project]
+name = "testcenter-ansible-collection"
+version = "0.1.0"
+description = "Modules and role to administer IQB Testcenter instances"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "ansible-core==2.12.*",
+    "requests>=2.34.2",
+]

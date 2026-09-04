@@ -22,4 +22,3 @@ testcenter_brute_force_protection: admin login person
 testcenter_password_min_length: 7
 testcenter_password_pattern: '^.*$'
 testcenter_set_admin_init_password: true
-
